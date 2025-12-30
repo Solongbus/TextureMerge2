@@ -8,7 +8,7 @@ using ImageMagick;
 
 namespace TextureMerge
 {
-    public enum Channel : int { Red = 0, Green = 1, Blue = 2, Alpha = 3 }
+    public enum Channel : uint { Red = 0, Green = 1, Blue = 2, Alpha = 3 }
 
     public static class Extensions
     {
@@ -42,6 +42,40 @@ namespace TextureMerge
             }
         }
 
+        public static Task SetImageThumbnailAsync(this Image element, TMImage image)
+        {
+            return Task.Run(() =>
+            {
+                element.SetImageThumbnailDispatcher(image);
+            });
+        }
+
+        public static void SetImageThumbnailDispatcher(this Image element, TMImage image)
+        {
+            if (image == null)
+            {
+                element.Source = null;
+                return;
+            }
+
+            using (var stream = new MemoryStream())
+            {
+                image.Image.Format = MagickFormat.Png;
+                image.Image.Write(stream);
+
+                element.Dispatcher.Invoke(() =>
+                {
+                    var imageSource = new BitmapImage();
+                    imageSource.BeginInit();
+                    imageSource.CacheOption = BitmapCacheOption.OnLoad;
+                    imageSource.StreamSource = stream;
+                    imageSource.EndInit();
+
+                    element.Source = imageSource;
+                });
+            }
+        }
+
         public static void Save(this TMImage bitmap, string saveFilePath)
         {
             if (!Directory.Exists(Path.GetDirectoryName(saveFilePath)))
@@ -60,9 +94,9 @@ namespace TextureMerge
             return Task.Run(() => bitmap.Save(saveFilePath));
         }
 
-        public static Color ToColor(this int color)
+        public static Color ToColor(this uint color)
         {
-            int r, g, b;
+            uint r, g, b;
             r = (color & 0x00FF0000) >> 16;
             g = (color & 0x0000FF00) >> 8;
             b = (color & 0x000000FF);
@@ -74,11 +108,11 @@ namespace TextureMerge
             );
         }
 
-        public static int ToInt(this Color color)
+        public static uint ToInt(this Color color)
         {
-            int r = color.R,
-                g = color.G,
-                b = color.B;
+            uint r = color.R,
+                 g = color.G,
+                 b = color.B;
 
             return (r << 16) | (g << 8) | b;
         }
