@@ -4,10 +4,10 @@ namespace TextureMerge
 {
     public partial class Resize : Window
     {
-        public int NewWidth { get; private set; }
-        public int NewHeight { get; private set; }
+        public uint NewWidth { get; private set; }
+        public uint NewHeight { get; private set; }
 
-        public Resize(int width, int height)
+        public Resize(uint width, uint height)
         {
             InitializeComponent();
             WidthBox.Text = (NewWidth = width).ToString();
@@ -16,7 +16,7 @@ namespace TextureMerge
 
         private void OKButton(object sender, RoutedEventArgs e)
         {
-            if (int.TryParse(WidthBox.Text, out int width) && int.TryParse(HeightBox.Text, out int height) && width > 0 && height > 0)
+            if (uint.TryParse(WidthBox.Text, out uint width) && uint.TryParse(HeightBox.Text, out uint height) && width > 0 && height > 0)
             {
                 NewWidth = width;
                 NewHeight = height;

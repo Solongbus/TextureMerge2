@@ -26,14 +26,14 @@ namespace TextureMerge
             if (red is null && green is null && blue is null && alpha is null)
                 throw new InvalidOperationException("No image loaded");
 
-            if (!CheckResolution(out int width, out int height))
+            if (!CheckResolution(out uint width, out uint height))
                 throw new InvalidOperationException("Resolution missmatch");
 
             if (red?.Image.HasAlpha == true || green?.Image.HasAlpha == true || blue?.Image.HasAlpha == true)
                 throw new ArgumentException("Bitmap has alpha channel");
 
             var result = new TMImage(new MagickImage(fillColor, width, height));
-            result.Image.Depth = depth == -1 ? GetHighestDepth() : depth;
+            result.Image.Depth = depth <= -1 ? GetHighestDepth() : (uint)depth;
 
             if (alpha is null)
                 result.Image.Alpha(AlphaOption.Off);
@@ -83,7 +83,7 @@ namespace TextureMerge
             return result;
         }
 
-        private ushort[] CreateArrayWithColor(int capacity, ushort color)
+        private ushort[] CreateArrayWithColor(uint capacity, ushort color)
         {
             var arr = new ushort[capacity];
             for (int i = 0; i < arr.Length; i++)
@@ -121,28 +121,28 @@ namespace TextureMerge
 
         public bool IsDepthSame()
         {
-            int depth = -1;
+            uint? depth = null;
             if (red != null)
             {
                 depth = red.Image.Depth;
             }
             if (green != null)
             {
-                if (depth == -1)
+                if (depth == null)
                     depth = green.Image.Depth;
                 else if (depth != green.Image.Depth)
                     return false;
             }
             if (blue != null)
             {
-                if (depth == -1)
+                if (depth == null)
                     depth = blue.Image.Depth;
                 else if (depth != blue.Image.Depth)
                     return false;
             }
             if (alpha != null)
             {
-                if (depth == -1)
+                if (depth == null)
                     depth = alpha.Image.Depth;
                 if (depth != alpha.Image.Depth)
                     return false;
@@ -150,9 +150,9 @@ namespace TextureMerge
             return true;
         }
 
-        private int GetHighestDepth()
+        private uint GetHighestDepth()
         {
-            int max = 0;
+            uint max = 0;
             if (red != null)
                 max = red.Image.Depth > max ? red.Image.Depth : max;
             if (green != null)
@@ -165,7 +165,7 @@ namespace TextureMerge
             return max;
         }
 
-        public bool CheckResolution(out int width, out int height)
+        public bool CheckResolution(out uint width, out uint height)
         {
             width = height = 0;
 
@@ -218,7 +218,7 @@ namespace TextureMerge
 
         public bool CheckResolution() => CheckResolution(out _, out _);
 
-        public Task<Merge> ResizeAsync(int width, int height, bool stretch, MagickColor fillColor = null)
+        public Task<Merge> ResizeAsync(uint width, uint height, bool stretch, MagickColor fillColor = null)
         {
             return Task.Run(() =>
             {
@@ -227,7 +227,7 @@ namespace TextureMerge
             });
         }
 
-        public Merge Resize(int width, int height, bool stretch, MagickColor fillColor = null)
+        public Merge Resize(uint width, uint height, bool stretch, MagickColor fillColor = null)
         {
             if (width < 1 || height < 1)
                 throw new ArgumentException("width and height must be greater than 0");
@@ -253,7 +253,7 @@ namespace TextureMerge
             return newInst;
         }
 
-        private static TMImage ResizeImage(TMImage source, int width, int height, bool stretch, MagickColor fillColor = null)
+        private static TMImage ResizeImage(TMImage source, uint width, uint height, bool stretch, MagickColor fillColor = null)
         {
             var result = source.Clone();
             if (stretch)

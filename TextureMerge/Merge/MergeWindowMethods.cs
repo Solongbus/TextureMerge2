@@ -31,7 +31,7 @@ namespace TextureMerge
             return null;
         }
 
-        private async Task<Merge> ResizeMergeSetAsync(Merge merge, int width, int height)
+        private async Task<Merge> ResizeMergeSetAsync(Merge merge, uint width, uint height)
         {
             var resizeDialog = new Resize(width, height)
             {
@@ -116,7 +116,7 @@ namespace TextureMerge
 
         private async void ButtonMerge(object sender, RoutedEventArgs e)
         {
-            bool isResolutionValid = merge.CheckResolution(out int width, out int height);
+            bool isResolutionValid = merge.CheckResolution(out uint width, out uint height);
             if (width == 0 || height == 0)
             {
                 MessageDialog.Show("No images loaded", type: MessageDialog.Type.Error);
