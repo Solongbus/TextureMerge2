@@ -225,7 +225,7 @@ namespace TextureMerge
             {
                 if (AskForImagePath(out string path) == true)
                 {
-                    LoadToChannelAsync(channel, path);
+                    _ = LoadToChannelAsync(channel, path);
                 }
             }
             else
@@ -246,7 +246,7 @@ namespace TextureMerge
             mapper.slots[ichannel].colorSourceGrid.Visibility = Visibility.Hidden;
         }
 
-        private async void LoadToChannelAsync(Channel channel, string path)
+        private async Task LoadToChannelAsync(Channel channel, string path, Channel? srcChannel = null)
         {
             if (path == null || path.Length == 0 || !File.Exists(path))
             {
@@ -268,7 +268,7 @@ namespace TextureMerge
             SetStatus("Loading...", statusBlueColor);
             try
             {
-                var sourceChannel = channel == Channel.Alpha ? Channel.Red : channel;
+                var sourceChannel = srcChannel ?? (channel == Channel.Alpha ? Channel.Red : channel);
                 await merge.LoadChannelAsync(path, channel, sourceChannel);
                 image.SetImageThumbnail(await merge.GetChannelThumbnailAsync(channel));
                 label.Visibility = Visibility.Hidden;
@@ -297,8 +297,10 @@ namespace TextureMerge
                     return new SolidColorBrush(Color.FromRgb(0, value, 0));
                 case Channel.Blue:
                     return new SolidColorBrush(Color.FromRgb(0, 0, value));
+                case Channel.Alpha:
+                    return new SolidColorBrush(Color.FromRgb(value, value, value));
                 default:
-                    throw new ArgumentException("Invalid channel. Only R, G, B are allowed");
+                    throw new ArgumentException("Invalid channel. Only R, G, B, A are allowed");
             }
         }
 
@@ -330,13 +332,13 @@ namespace TextureMerge
                 }
                 else
                 {
+                    mapper.slots[ichannel].sourceChannelButton[3].Visibility = merge.HasAlphaAt(channel) ? Visibility.Visible : Visibility.Hidden;
+
                     grayscaleGrid.Visibility = Visibility.Hidden;
                     colorGrid.Visibility = Visibility.Visible;
 
                     int source = (int)merge.GetSourceChannel(channel);
-                    if (source >= 3)
-                        throw new InvalidOperationException("Source channel is something else than R, G, B. (Alpha cannot be source channel)");
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 4; i++)
                     {
                         mapper.slots[ichannel].sourceChannelButton[i].Background = GetColorBrushFor((Channel)i, source == i);
                     }

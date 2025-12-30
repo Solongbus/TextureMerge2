@@ -29,58 +29,50 @@ namespace TextureMerge
             if (!CheckResolution(out uint width, out uint height))
                 throw new InvalidOperationException("Resolution missmatch");
 
-            if (red?.Image.HasAlpha == true || green?.Image.HasAlpha == true || blue?.Image.HasAlpha == true)
-                throw new ArgumentException("Bitmap has alpha channel");
+            //if (red?.Image.HasAlpha == true || green?.Image.HasAlpha == true || blue?.Image.HasAlpha == true)
+            //    throw new ArgumentException("Bitmap has alpha channel");
 
             var result = new TMImage(new MagickImage(fillColor, width, height));
             result.Image.Depth = depth <= -1 ? GetHighestDepth() : (uint)depth;
 
-            if (alpha is null)
-                result.Image.Alpha(AlphaOption.Off);
-            else
-                result.Image.Alpha(AlphaOption.On);
+            result.Image.Alpha(AlphaOption.On);
 
             var resultPixels = result.GetPixelArray();
 
-            if ((alpha == null && resultPixels.Length % 3 != 0) || (alpha != null && resultPixels.Length % 4 != 0))
-                throw new InvalidOperationException("Internal error: Wrong pixels");
+            //if ((alpha == null && resultPixels.Length % 3 != 0) || (alpha != null && resultPixels.Length % 4 != 0))
+            //    throw new InvalidOperationException("Internal error: Wrong pixels");
 
             var redPixels = red is null ? CreateArrayWithColor(width * height * 3, fillColor.R) : red.GetPixelArray();
+            var redAlpha = red is null ? false : red.Image.HasAlpha;
             var greenPixels = green is null ? CreateArrayWithColor(width * height * 3, fillColor.G) : green.GetPixelArray();
+            var greenAlpha = green is null ? false : green.Image.HasAlpha;
             var bluePixels = blue is null ? CreateArrayWithColor(width * height * 3, fillColor.B) : blue.GetPixelArray();
+            var blueAlpha = blue is null ? false : blue.Image.HasAlpha;
             var alphaPixels = alpha is null ? CreateArrayWithColor(width * height * 3, fillColor.A) : alpha.GetPixelArray();
+            var alphaAlpha = alpha is null ? false : alpha.Image.HasAlpha;
 
-            for (int i = 0; i < resultPixels.Length; i++)
-            {
-                var redi = i - (i % 3) + (int)redChSource;
-                var greeni = i - (i % 3) + (int)greenChSource;
-                var bluei = i - (i % 3) + (int)blueChSource;
-                var alphai = i - (i % 3) + (int)alphaChSource;
-
-                if (alpha is null)
-                {
-                    switch (i % 3)
-                    {
-                        case 0: resultPixels[i] = redPixels[redi]; break;
-                        case 1: resultPixels[i] = greenPixels[greeni]; break;
-                        case 2: resultPixels[i] = bluePixels[bluei]; break;
-                        default: throw new InvalidOperationException("Impossible Exception");
-                    };
-                }
-                else
-                {
-                    switch (i % 4)
-                    {
-                        case 0: resultPixels[i] = redPixels[(i / 4) * 3 + (redi % 3)]; break;
-                        case 1: resultPixels[i] = greenPixels[(i / 4) * 3 + (greeni % 3)]; break;
-                        case 2: resultPixels[i] = bluePixels[(i / 4) * 3 + (bluei % 3)]; break;
-                        case 3: resultPixels[i] = alphaPixels[(i / 4) * 3 + (alphai % 3)]; break;
-                        default: throw new InvalidOperationException("Impossible Exception");
-                    };
-                }
-            }
+            CopyIn(ref resultPixels, redPixels, redAlpha, (int)redChSource, 0);
+            CopyIn(ref resultPixels, greenPixels, greenAlpha, (int)greenChSource, 1);
+            CopyIn(ref resultPixels, bluePixels, blueAlpha, (int)blueChSource, 2);
+            CopyIn(ref resultPixels, alphaPixels, alphaAlpha, (int)alphaChSource, 3);
             result.SetPixels(resultPixels);
+            if (alpha is null)
+            {
+                result.Image.Alpha(AlphaOption.Off);
+            }
             return result;
+        }
+
+        private void CopyIn(ref ushort[] result, ushort[] input, bool hasInputAlpha, int getIndex, int putIndex)
+        {
+            if (result.Length % 4 != 0)
+                throw new InvalidOperationException("Internal error: Wrong pixels");
+            var alpha = hasInputAlpha ? 1 : 0;
+            var incr = 3 + alpha;
+            for (int i = getIndex; i < input.Length; i += incr)
+            {
+                result[(i / incr) * 4 + putIndex] = input[i];
+            }
         }
 
         private ushort[] CreateArrayWithColor(uint capacity, ushort color)
@@ -93,15 +85,7 @@ namespace TextureMerge
 
         public bool IsGrayScale(Channel channel)
         {
-            TMImage img;
-            switch (channel)
-            {
-                case Channel.Red: img = red; break;
-                case Channel.Green: img = green; break;
-                case Channel.Blue: img = blue; break;
-                case Channel.Alpha: img = alpha; break;
-                default: throw new ArgumentException("Invalid channel");
-            }
+            TMImage img = GetStoredImage(channel);
 
             if (img == null)
             {
@@ -109,14 +93,18 @@ namespace TextureMerge
             }
 
             var pixels = img.GetPixelArray();
-            for (int i = 0; i < pixels.Length; i++)
+            var incr = 3 + (img.Image.HasAlpha ? 1 : 0);
+            for (int i = 0; i < pixels.Length; i += incr)
             {
-                if (i % 3 != 0)
-                    continue;
                 if (pixels[i] != pixels[i + 1] || pixels[i] != pixels[i + 2])
                     return false;
             }
             return true;
+        }
+
+        public bool HasAlphaAt(Channel channel)
+        {
+            return GetStoredImage(channel).Image.HasAlpha;
         }
 
         public bool IsDepthSame()
@@ -305,21 +293,16 @@ namespace TextureMerge
 
         private static TMImage ExtractChannel(TMImage sourceBitmap, Channel channel)
         {
-            if (channel == Channel.Alpha)
-                throw new ArgumentException("Alpha can't be source channel");
-
             if (sourceBitmap == null)
                 throw new ArgumentException("Source bitmap is null");
-
-            if (sourceBitmap.Image.HasAlpha)
-                throw new ArgumentException("Source bitmap has alpha channel");
 
             var result = new TMImage(new MagickImage(new MagickColor(0, 0, 0), sourceBitmap.Image.Width, sourceBitmap.Image.Height), sourceBitmap.FileName);
             var pixels = result.GetPixelArray();
             var sourcePixels = sourceBitmap.GetPixelArray();
+            var alpha = sourceBitmap.Image.HasAlpha ? 1 : 0;
             for (int i = 0; i < pixels.Length; i++)
             {
-                pixels[i] = sourcePixels[i - (i % 3) + (int)channel];
+                pixels[i] = sourcePixels[i / 3 * (3 + alpha) + (int)channel];
             }
             result.SetPixels(pixels);
             return result;
@@ -347,14 +330,9 @@ namespace TextureMerge
             if (path == string.Empty)
                 throw new ArgumentException("Invalid path");
 
-            if (channelSource == Channel.Alpha)
-                throw new ArgumentException("Alpha can't be source channel");
-
-
             var source = new TMImage(new MagickImage(path), Path.GetFileName(path)) ?? throw new ArgumentException("Failed to load image");
 
-            source.Image.Alpha(AlphaOption.Off);
-            source.Image.ColorType = ColorType.TrueColor;
+            source.Image.ColorType = source.Image.HasAlpha ? ColorType.TrueColorAlpha : ColorType.TrueColor;
             source.Image.AutoOrient();
             source.Image.ColorSpace = ColorSpace.sRGB;
 
@@ -364,9 +342,6 @@ namespace TextureMerge
 
         public void SetChannelSource(Channel channel, Channel channelSource)
         {
-            if (channelSource == Channel.Alpha)
-                throw new ArgumentException("Alpha can't be source channel");
-
             switch (channel)
             {
                 case Channel.Red:

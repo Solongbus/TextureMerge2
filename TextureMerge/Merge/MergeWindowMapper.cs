@@ -18,7 +18,7 @@ namespace TextureMerge
                     {
                         sourceChannelButton = new Button[]
                         {
-                            srcRR, srcRG, srcRB,
+                            srcRR, srcRG, srcRB, srcRA
                         },
                         loadButton = LoadR,
                         label = redNoDataLabel,
@@ -32,7 +32,7 @@ namespace TextureMerge
                     {
                         sourceChannelButton = new Button[]
                         {
-                            srcGR, srcGG, srcGB,
+                            srcGR, srcGG, srcGB, srcGA
                         },
                         loadButton = LoadG,
                         label = greenNoDataLabel,
@@ -46,7 +46,7 @@ namespace TextureMerge
                     {
                         sourceChannelButton = new Button[]
                         {
-                            srcBR, srcBG, srcBB,
+                            srcBR, srcBG, srcBB, srcBA
                         },
                         loadButton = LoadB,
                         label = blueNoDataLabel,
@@ -60,7 +60,7 @@ namespace TextureMerge
                     {
                         sourceChannelButton = new Button[]
                         {
-                            srcAR, srcAG, srcAB,
+                            srcAR, srcAG, srcAB, srcAA
                         },
                         loadButton = LoadA,
                         label = alphaNoDataLabel,

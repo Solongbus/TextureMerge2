@@ -4,7 +4,7 @@ namespace TextureMerge
 {
     /// <summary>
     /// "TextureMerge Image"
-    /// Special class as MagickImage wrapper for reliable garbage collection.
+    /// MagickImage wrapper.
     /// </summary>
     public class TMImage
     {
