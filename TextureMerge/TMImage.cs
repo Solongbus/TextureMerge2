@@ -1,4 +1,4 @@
-﻿using ImageMagick;
+using ImageMagick;
 
 namespace TextureMerge
 {
@@ -10,6 +10,7 @@ namespace TextureMerge
     {
         public MagickImage Image { get; private set; }
         public string FileName { get; private set; } = null;
+        public string FilePath { get; private set; } = null;
 
         public TMImage(MagickImage image)
         {
@@ -19,6 +20,11 @@ namespace TextureMerge
         public TMImage(MagickImage image, string name) : this(image)
         {
             FileName = name;
+        }
+
+        public TMImage(MagickImage image, string name, string path) : this(image, name)
+        {
+            FilePath = path;
         }
 
         public ushort[] GetPixelArray()

@@ -1,0 +1,1 @@
+dotnet build TextureMerge/TextureMerge2.csproj -c Release -o bin/Release/ -p:Platform=x64

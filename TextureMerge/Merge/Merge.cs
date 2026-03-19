@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using ImageMagick;
@@ -330,7 +330,7 @@ namespace TextureMerge
             if (path == string.Empty)
                 throw new ArgumentException("Invalid path");
 
-            var source = new TMImage(new MagickImage(path), Path.GetFileName(path)) ?? throw new ArgumentException("Failed to load image");
+            var source = new TMImage(new MagickImage(path), Path.GetFileName(path), path) ?? throw new ArgumentException("Failed to load image");
 
             source.Image.ColorType = source.Image.HasAlpha ? ColorType.TrueColorAlpha : ColorType.TrueColor;
             source.Image.AutoOrient();
@@ -409,7 +409,12 @@ namespace TextureMerge
 
         public string GetOriginFileName(Channel channel)
         {
-            return GetStoredImage(channel).FileName;
+            return GetStoredImage(channel)?.FileName;
+        }
+
+        public string GetOriginFilePath(Channel channel)
+        {
+            return GetStoredImage(channel)?.FilePath;
         }
 
         public Channel GetSourceChannel(Channel channel)

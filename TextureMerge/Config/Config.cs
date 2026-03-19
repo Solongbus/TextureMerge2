@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -44,6 +44,17 @@ namespace TextureMerge
             catch (Exception) { return null; }
         }
 
+        private static string GetConfigPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            string expanded = path.Expand();
+            if (Path.IsPathRooted(expanded)) return expanded;
+            
+            // 如果是相对路径，则相对于可执行文件所在目录
+            string exeDir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            return Path.Combine(exeDir, expanded);
+        }
+
         public static void Load()
         {
             string lastRedirect = Current.Redirect;
@@ -52,12 +63,13 @@ namespace TextureMerge
             {
                 do
                 {
-                    if (!File.Exists(lastRedirect.Expand()))
+                    string fullPath = GetConfigPath(lastRedirect);
+                    if (!File.Exists(fullPath))
                         return;
 
                     var serializer = new XmlSerializer(typeof(Config));
 
-                    using (var stream = new FileStream(lastRedirect.Expand(), FileMode.Open, FileAccess.Read))
+                    using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
                     {
                         var config = (Config)serializer.Deserialize(stream);
 
@@ -84,11 +96,17 @@ namespace TextureMerge
 
         public static void Save()
         {
-            if (!Current.Redirect.Contains('\\') || Directory.Exists(Path.GetDirectoryName(Current.Redirect.Expand())))
+            if (App.IsCliMode) return; // CLI 模式下不自动保存配置，避免生成多余的 config.xml
+
+            string fullPath = GetConfigPath(Current.Redirect);
+            if (string.IsNullOrEmpty(fullPath)) return;
+
+            string dir = Path.GetDirectoryName(fullPath);
+            if (string.IsNullOrEmpty(dir) || Directory.Exists(dir))
             {
                 try
                 {
-                    using (var stream = new FileStream(Current.Redirect.Expand(), FileMode.Create, FileAccess.Write))
+                    using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
                     {
                         var serializer = new XmlSerializer(typeof(Config));
                         serializer.Serialize(stream, Current);

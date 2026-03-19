@@ -1,9 +1,12 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ImageMagick;
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.Win32;
+using System.IO;
 
 namespace TextureMerge
 {
@@ -79,8 +82,15 @@ namespace TextureMerge
         private void LoadArgs()
         {
             string[] args = Environment.GetCommandLineArgs();
-            if (args != null && args.Length > 0)
+            if (args != null && args.Length > 1)
             {
+                string firstArg = args[1];
+                if (firstArg.EndsWith(".tmproj", StringComparison.OrdinalIgnoreCase))
+                {
+                    LoadProject(firstArg);
+                    return;
+                }
+
                 for (int i = 1; i < args.Length; ++i)
                 {
                     switch (i - 1)
@@ -99,6 +109,43 @@ namespace TextureMerge
                             break;
                     }
                 }
+            }
+        }
+
+        private async void LoadProject(string path)
+        {
+            try
+            {
+                var project = ProjectConfig.Load(path);
+                if (project == null) return;
+
+                if (!string.IsNullOrEmpty(project.SavePath)) PathToSave.Text = project.SavePath;
+                if (!string.IsNullOrEmpty(project.SaveName)) SaveImageName.Text = project.SaveName;
+                if (!string.IsNullOrEmpty(project.DefaultColor))
+                {
+                    try
+                    {
+                        defaultColor = (Color)ColorConverter.ConvertFromString(project.DefaultColor);
+                        DefaultColorRect.Fill = new SolidColorBrush(defaultColor);
+                    }
+                    catch { }
+                }
+
+                if (project.Channels != null)
+                {
+                    foreach (var ch in project.Channels)
+                    {
+                        if (File.Exists(ch.FilePath))
+                        {
+                            await LoadToChannelAsync((Channel)ch.Slot, ch.FilePath, (Channel)ch.SourceChannel);
+                        }
+                    }
+                }
+                SetStatus("Project Loaded!", statusGreenColor);
+            }
+            catch (Exception ex)
+            {
+                MessageDialog.Show("Failed to load project: " + ex.Message, "Error", MessageDialog.Type.Error);
             }
         }
 
@@ -305,10 +352,63 @@ namespace TextureMerge
             var settings = new Settings(Config.Current);
             settings.ShowDialog();
             if (settings.DialogResult == true && settings.SavedConfig != null)
-            {
+            { 
                 Config.ApplyConfig(settings.SavedConfig);
                 Config.Save();
             }
+        }
+
+        private void SaveProjectButton(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                InitialDirectory = PathToSave.Text,
+                Title = "Save Project Configuration",
+                Filter = "TextureMerge Project (*.tmproj)|*.tmproj",
+                FileName = "MyProject.tmproj"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var project = new ProjectConfig
+                {
+                    SavePath = PathToSave.Text,
+                    SaveName = SaveImageName.Text,
+                    DefaultColor = defaultColor.ToString(),
+                    Channels = new System.Collections.Generic.List<ProjectConfig.ChannelSettings>()
+                };
+
+                for (int i = 0; i < 4; i++)
+                {
+                    Channel channel = (Channel)i;
+                    if (!merge.IsEmpty(channel))
+                    {
+                        project.Channels.Add(new ProjectConfig.ChannelSettings
+                        { 
+                            Slot = i,
+                            FilePath = merge.GetOriginFilePath(channel),
+                            SourceChannel = (int)merge.GetSourceChannel(channel)
+                        });
+                    }
+                }
+
+                ProjectConfig.Save(saveFileDialog.FileName, project);
+                SetStatus("Project Saved!", statusGreenColor);
+            }
+        }
+
+        private void ExportCLIButton(object sender, RoutedEventArgs e)
+        {
+            string red = merge.IsEmpty(Channel.Red) ? null : merge.GetOriginFilePath(Channel.Red);
+            string green = merge.IsEmpty(Channel.Green) ? null : merge.GetOriginFilePath(Channel.Green);
+            string blue = merge.IsEmpty(Channel.Blue) ? null : merge.GetOriginFilePath(Channel.Blue);
+            string alpha = merge.IsEmpty(Channel.Alpha) ? null : merge.GetOriginFilePath(Channel.Alpha);
+            string output = Path.Combine(PathToSave.Text, SaveImageName.Text);
+            string color = defaultColor.ToString();
+
+            string command = CommandLineParser.CreateCommand(red, green, blue, alpha, output, color, -1);
+            Clipboard.SetText(command);
+            SetStatus("CLI Command Copied!", statusGreenColor);
         }
 
         private void SwapRG(object sender, RoutedEventArgs e)
