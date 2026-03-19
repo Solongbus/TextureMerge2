@@ -6,17 +6,21 @@
 [![Main](https://github.com/Solongbus/TextureMerge2/actions/workflows/main.yml/badge.svg)](https://github.com/Solongbus/TextureMerge2/actions/workflows/main.yml)
 [![CodeQL](https://github.com/Solongbus/TextureMerge2/actions/workflows/codeql.yml/badge.svg)](https://github.com/Solongbus/TextureMerge2/actions/workflows/codeql.yml)
 
-This project is based on the original source: [fidifis/TextureMerge](https://github.com/fidifis/TextureMerge)
 
-### New Features in TextureMerge 2:
+> [!IMPORTANT]
+> This project is based on the original source: [fidifis/TextureMerge](https://github.com/fidifis/TextureMerge)
+
+# <img src="https://github.com/Solongbus/TextureMerge2/raw/master/Tutorial-images/TextureMerge-Icon.png" height="48"> New Features in TextureMerge 2:
+![image](https://github.com/Solongbus/TextureMerge2/raw/master/Tutorial-images/img8.jpg)
 - **Project Configuration**: Save and load your project settings as `.tmproj` files for quick access.
 - **CLI Mode**: Fully functional command-line interface for automated workflows.
 - **Copy CLI Command**: Easily copy the command for your current project setup to the clipboard.
-![image](https://github.com/Solongbus/TextureMerge2/raw/master/Tutorial-images/img8.jpg)
 
 
+<br><br><br><br><br><br>
 
-### Below is the old content of Readme.MD
+> [!CAUTION]
+> # Below is the old content of Readme.MD
 
 ## Software to merge or pack textures into image channels, producing one image with up to four textures.
 
