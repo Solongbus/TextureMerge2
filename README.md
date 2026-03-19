@@ -6,6 +6,13 @@
 [![Main](https://github.com/Solongbus/TextureMerge2/actions/workflows/main.yml/badge.svg)](https://github.com/Solongbus/TextureMerge2/actions/workflows/main.yml)
 [![CodeQL](https://github.com/Solongbus/TextureMerge2/actions/workflows/codeql.yml/badge.svg)](https://github.com/Solongbus/TextureMerge2/actions/workflows/codeql.yml)
 
+This project is based on the original source: [fidifis/TextureMerge](https://github.com/fidifis/TextureMerge)
+
+### New Features in TextureMerge 2:
+- **Project Configuration**: Save and load your project settings as `.tmproj` files for quick access.
+- **CLI Mode**: Fully functional command-line interface for automated workflows.
+- **Copy CLI Command**: Easily copy the command for your current project setup to the clipboard.
+
 ## Software to merge or pack textures into image channels, producing one image with up to four textures.
 
 **TextureMerge 2** is ideal if you want to pack individual grayscale textures in one image.
@@ -14,12 +21,6 @@
 
 ## Requirements
 To run this program you need [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48) (installed by default on most windows computers)
-
-## Features
-- **Channel Packing**: Merge up to 4 grayscale textures into a single RGBA image.
-- **Project Configuration**: Save and load your project settings as `.tmproj` files for quick access.
-- **CLI Mode**: Fully functional command-line interface for automated workflows.
-- **Copy CLI Command**: Easily copy the command for your current project setup to the clipboard.
 
 ## Usage
 1. Download the software from [releases](https://github.com/Solongbus/TextureMerge2/releases) \
