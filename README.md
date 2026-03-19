@@ -15,6 +15,9 @@ This project is based on the original source: [fidifis/TextureMerge](https://git
 ![image](https://github.com/Solongbus/TextureMerge2/raw/master/Tutorial-images/img8.jpg)
 
 
+
+### Below is the old content of Readme.MD
+
 ## Software to merge or pack textures into image channels, producing one image with up to four textures.
 
 **TextureMerge 2** is ideal if you want to pack individual grayscale textures in one image.
